@@ -4,13 +4,30 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.16.x]
-        os: [ubuntu-latest] # TODO: Add [macos-latest, windows-latest]
+        include:
+          - go-version: 1.16.x
+            arch: amd64
+            os: ubuntu-latest # TODO: Add [macos-latest, windows-latest]
+          - go-version: 1.16.x
+            arch: arm64
+            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       run: sudo apt-get -y install autoconf automake libtool curl make g++ unzip
+    - name: Setup GOARCH=arm64
+      if: ${{ matrix.arch == 'arm64' }}
+      run: echo "GOARCH=arm64" >> $GITHUB_ENV
+    - name: Setup qemu emulator
+      if: ${{ matrix.arch == 'arm64' }}
+      # setup qemu-user-static emulator and register it with binfmt_misc so that aarch64 binaries
+      # are automatically executed using qemu.
+      # The docker image being used is based on https://github.com/multiarch/qemu-user-static
+      # but it has a slighly newer build of qemu-user-static. With "multiarch/qemu-user-static:5.2.0-2"
+      # the emulated tests occasionally fail with "SIGILL: illegal instruction" (which seems to be a qemu related problem),
+      # but with hectormolinero/qemu-user-static they seem stable.
+      run: docker run --rm --privileged hectormolinero/qemu-user-static:v26 --reset --credential yes --persistent yes
     - name: Install Go
       uses: actions/setup-go@v2
       with:
@@ -23,4 +40,20 @@ jobs:
         path: .cache
         key: ${{ runner.os }}-${{ hashFiles('integration_test.go') }}
     - name: Test
+      if: ${{ matrix.arch != 'arm64' }}
       run: go test -v -mod=vendor -timeout=60m -count=1 integration_test.go -failfast
+    - name: Test with arm64 emulator
+      # since GOARCH=arm64 is set, aarch64 binaries will be produced and they will be automatically
+      # picked up by qemu when executed.
+      # We are not using "integration_test.go" test harness since it uses the value of GOARCH
+      # for various setup steps and that doesn't work well when not on a real arm64 machine.
+      # Intead, we simply execute the basic set of tests directly and that seems sufficient
+      # for getting basic test coverage.
+      if: ${{ matrix.arch == 'arm64' }}
+      run: |
+        set -ex
+        go test ./...
+        go test -tags purego ./...
+        go test -tags protoreflect ./...
+        go test -tags protolegacy ./...
+        (cd cmd/protoc-gen-go/testdata; go test)
