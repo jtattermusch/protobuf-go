@@ -36,8 +36,9 @@ var (
 	protobufVersion = "3.15.3"
 	protobufSHA256  = "" // ignored if protobufVersion is a git hash
 
-	golangVersions = []string{"1.9.7", "1.10.8", "1.11.13", "1.12.17", "1.13.15", "1.14.15", "1.15.9", "1.16.1"}
-	golangLatest   = golangVersions[len(golangVersions)-1]
+	// List of versions to test is initialized by mustInitDeps.
+	golangVersions []string
+	golangLatest   string
 
 	staticcheckVersion = "2020.1.4"
 	staticcheckSHA256s = map[string]string{
@@ -122,9 +123,9 @@ func Test(t *testing.T) {
 			runGo("ProtocGenGo", command{Dir: "cmd/protoc-gen-go/testdata"}, "go", "test")
 			runGo("Conformance", command{Dir: "internal/conformance"}, "go", "test", "-execute")
 
-			// Only run the 32-bit compatability tests for Linux;
+			// Only run the 32-bit compatibility tests for Linux x64;
 			// avoid Darwin since 10.15 dropped support i386 code execution.
-			if runtime.GOOS == "linux" {
+			if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" {
 				runGo("Arch32Bit", command{Dir: workDir, Env: append(os.Environ(), "GOARCH=386")}, "go", "test", "./...")
 			}
 		}
@@ -173,6 +174,15 @@ func mustInitDeps(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	// Determine golangVersions to test
+	if runtime.GOARCH != "arm64" {
+		golangVersions = []string{"1.9.7", "1.10.8", "1.11.13", "1.12.17", "1.13.15", "1.14.15", "1.15.9", "1.16.1"}
+	} else {
+		// on arm64, the "go test -race" flag is only supported for go1.13+
+		golangVersions = []string{"1.13.15", "1.14.15", "1.15.9", "1.16.1"}
+	}
+	golangLatest = golangVersions[len(golangVersions)-1]
 
 	// Determine the directory to place the test directory.
 	repoRoot, err := os.Getwd()
