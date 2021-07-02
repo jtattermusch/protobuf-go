@@ -116,21 +116,21 @@ func Test(t *testing.T) {
 		supportsRaceTestArg := true
 		if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" &&
 		    (strings.HasPrefix(goVersion, "1.9") ||
-			 strings.HasPrefix(goVersion, "1.10") ||
-			 strings.HasPrefix(goVersion, "1.11") ||
-			 strings.HasPrefix(goVersion, "1.12")) {
+			        strings.HasPrefix(goVersion, "1.10") ||
+			        strings.HasPrefix(goVersion, "1.11") ||
+			        strings.HasPrefix(goVersion, "1.12")) {
 			supportsRaceTestArg = false
 		}
 
 		workDir := filepath.Join(goPath, "src", modulePath)
 		if supportsRaceTestArg {
-		  runGo("Normal", command{Dir: workDir}, "go", "test", "-race", "./...")
-		  runGo("PureGo", command{Dir: workDir}, "go", "test", "-race", "-tags", "purego", "./...")
-		  runGo("Reflect", command{Dir: workDir}, "go", "test", "-race", "-tags", "protoreflect", "./...")
+		    runGo("Normal", command{Dir: workDir}, "go", "test", "-race", "./...")
+		    runGo("PureGo", command{Dir: workDir}, "go", "test", "-race", "-tags", "purego", "./...")
+		    runGo("Reflect", command{Dir: workDir}, "go", "test", "-race", "-tags", "protoreflect", "./...")
 		} else {
-		  runGo("Normal", command{Dir: workDir}, "go", "test", "./...")
-		  runGo("PureGo", command{Dir: workDir}, "go", "test", "-tags", "purego", "./...")
-		  runGo("Reflect", command{Dir: workDir}, "go", "test", "-tags", "protoreflect", "./...")
+		    runGo("Normal", command{Dir: workDir}, "go", "test", "./...")
+		    runGo("PureGo", command{Dir: workDir}, "go", "test", "-tags", "purego", "./...")
+		    runGo("Reflect", command{Dir: workDir}, "go", "test", "-tags", "protoreflect", "./...")
 		}
 		if goVersion == golangLatest {
 			runGo("ProtoLegacy", command{Dir: workDir}, "go", "test", "-race", "-tags", "protolegacy", "./...")
