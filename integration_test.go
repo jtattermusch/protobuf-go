@@ -114,11 +114,11 @@ func Test(t *testing.T) {
 		}
 
 		supportsRaceTestArg := true
-		if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" && (
-			 strings.HasPrefix(goVersion, "1.9")
-		     || strings.HasPrefix(goVersion, "1.10")
-		     || strings.HasPrefix(goVersion, "1.11")
-		     || strings.HasPrefix(goVersion, "1.12")) {
+		if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" &&
+		    (strings.HasPrefix(goVersion, "1.9") ||
+			 strings.HasPrefix(goVersion, "1.10") ||
+			 strings.HasPrefix(goVersion, "1.11") ||
+			 strings.HasPrefix(goVersion, "1.12")) {
 			supportsRaceTestArg = false
 		}
 
