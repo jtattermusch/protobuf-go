@@ -189,15 +189,6 @@ func mustInitDeps(t *testing.T) {
 		}
 	}
 
-	// Determine golangVersions to test
-	if runtime.GOARCH != "arm64" {
-		golangVersions = []string{"1.9.7", "1.10.8", "1.11.13", "1.12.17", "1.13.15", "1.14.15", "1.15.9", "1.16.1"}
-	} else {
-		// on arm64, the "go test -race" flag is only supported for go1.13+
-		golangVersions = []string{"1.13.15", "1.14.15", "1.15.9", "1.16.1"}
-	}
-	golangLatest = golangVersions[len(golangVersions)-1]
-
 	// Determine the directory to place the test directory.
 	repoRoot, err := os.Getwd()
 	check(err)
