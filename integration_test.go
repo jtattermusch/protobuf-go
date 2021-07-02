@@ -114,7 +114,7 @@ func Test(t *testing.T) {
 		}
 
 		supportsRaceTestArg := true
-		if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" &&
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm64" &&
 			(strings.HasPrefix(goVersion, "1.9") ||
 				strings.HasPrefix(goVersion, "1.10") ||
 				strings.HasPrefix(goVersion, "1.11") ||
