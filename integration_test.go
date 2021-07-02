@@ -36,9 +36,8 @@ var (
 	protobufVersion = "3.15.3"
 	protobufSHA256  = "" // ignored if protobufVersion is a git hash
 
-	// List of versions to test is initialized by mustInitDeps.
-	golangVersions []string
-	golangLatest   string
+	golangVersions = []string{"1.9.7", "1.10.8", "1.11.13", "1.12.17", "1.13.15", "1.14.15", "1.15.9", "1.16.1"}
+	golangLatest   = golangVersions[len(golangVersions)-1]
 
 	staticcheckVersion = "2020.1.4"
 	staticcheckSHA256s = map[string]string{
@@ -114,10 +113,25 @@ func Test(t *testing.T) {
 			}()
 		}
 
+		supportsRaceTestArg := true
+		if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" &&
+		  (strings.HasPrefix(goVersion, "1.9")
+		  || strings.HasPrefix(goVersion, "1.10")
+		  || strings.HasPrefix(goVersion, "1.11")
+		  || strings.HasPrefix(goVersion, "1.12")) {
+			supportsRaceTestArg = false
+		}
+
 		workDir := filepath.Join(goPath, "src", modulePath)
-		runGo("Normal", command{Dir: workDir}, "go", "test", "-race", "./...")
-		runGo("PureGo", command{Dir: workDir}, "go", "test", "-race", "-tags", "purego", "./...")
-		runGo("Reflect", command{Dir: workDir}, "go", "test", "-race", "-tags", "protoreflect", "./...")
+		if supportsRaceTestArg {
+		  runGo("Normal", command{Dir: workDir}, "go", "test", "-race", "./...")
+		  runGo("PureGo", command{Dir: workDir}, "go", "test", "-race", "-tags", "purego", "./...")
+		  runGo("Reflect", command{Dir: workDir}, "go", "test", "-race", "-tags", "protoreflect", "./...")
+		} else {
+		  runGo("Normal", command{Dir: workDir}, "go", "test", "./...")
+		  runGo("PureGo", command{Dir: workDir}, "go", "test", "-tags", "purego", "./...")
+		  runGo("Reflect", command{Dir: workDir}, "go", "test", "-tags", "protoreflect", "./...")
+		}
 		if goVersion == golangLatest {
 			runGo("ProtoLegacy", command{Dir: workDir}, "go", "test", "-race", "-tags", "protolegacy", "./...")
 			runGo("ProtocGenGo", command{Dir: "cmd/protoc-gen-go/testdata"}, "go", "test")
