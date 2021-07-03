@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -100,6 +101,16 @@ func Test(t *testing.T) {
 	for i := range golangVersions {
 		goVersion := golangVersions[i]
 		goLabel := "Go" + goVersion
+		parseGoVersion := func(version string) []int {
+			parts := strings.Split(version, ".")
+			result := make([]int, len(parts))
+			for i, p := range parts {
+				result[i], _ = strconv.Atoi(p)
+			}
+			return result
+		}
+		goVersionComponents := parseGoVersion(goVersion)
+
 		runGo := func(label string, cmd command, args ...string) {
 			wg.Add(1)
 			sema <- true
@@ -114,11 +125,9 @@ func Test(t *testing.T) {
 		}
 
 		supportsRaceTestArg := true
+		// on Linux arm64, "-race" test arg is only supported for go1.13+
 		if runtime.GOOS == "linux" && runtime.GOARCH == "arm64" &&
-			(strings.HasPrefix(goVersion, "1.9") ||
-				strings.HasPrefix(goVersion, "1.10") ||
-				strings.HasPrefix(goVersion, "1.11") ||
-				strings.HasPrefix(goVersion, "1.12")) {
+		    goVersionComponents[0] == 1 && goVersionComponents[1] < 13 {
 			supportsRaceTestArg = false
 		}
 
