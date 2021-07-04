@@ -127,7 +127,7 @@ func Test(t *testing.T) {
 		supportsRaceTestArg := true
 		// on Linux arm64, "-race" test arg is only supported for go1.13+
 		if runtime.GOOS == "linux" && runtime.GOARCH == "arm64" &&
-		    goVersionComponents[0] == 1 && goVersionComponents[1] < 13 {
+			goVersionComponents[0] == 1 && goVersionComponents[1] < 13 {
 			supportsRaceTestArg = false
 		}
 
